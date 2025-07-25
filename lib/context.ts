@@ -286,6 +286,8 @@ export function useConnectionPreview() {
     })
 
     const { elementX, elementY } = useMouseInElement(root);
+
+    const isConnected = computed(() => !!targetRect.value); 
     
     const coords = computed(() => {
         if (!sourceRect.value || !elementX.value || !elementY.value) return null;
@@ -349,6 +351,7 @@ export function useConnectionPreview() {
         getSmoothStepPath,
         getArrowPath,
         coords,
+        isConnected,
     }
 }
 
