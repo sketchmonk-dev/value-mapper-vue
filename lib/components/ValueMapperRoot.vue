@@ -15,7 +15,7 @@ const { width, height, connections, cancelConnection, isDragging } = useProvideV
 </script>
 <template>
     <div ref="root" @click="cancelConnection" :class="props.class" :style="[{ position: 'relative' }, props.style]">
-        <svg :view-box="`0 0 ${width} ${height}`" :width="width" :height="height" :style="{ position: 'absolute', width, height, left: 0, top: 0 }">
+        <svg :view-box="`0 0 ${width} ${height}`" :width="`${width}px`" :height="`${height}px`" :style="{ position: 'absolute', width: `${width}px`, height: `${height}px`, left: 0, top: 0 }">
             <slot name="connections" :connections="connections" />
         </svg>
         <slot :is-dragging="isDragging" />
