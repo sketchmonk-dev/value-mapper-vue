@@ -10,7 +10,7 @@ const props = defineProps<{
     type: NodeType;
 }>();
 
-const { el, onMouseDown, onMouseUp, onTouchEnd, onClick, isConnected, isDragSource } = useNode(props.identifier, props.type);
+const { el, onMouseDown, onMouseUp, onTouchEnd, onClick, onMouseEnter, onMouseLeave, isConnected, isDragSource, isDragTarget } = useNode(props.identifier, props.type);
 
 const handleStyle = computed(() => {
     let style: HTMLAttributes['style'] = {
@@ -37,16 +37,20 @@ const handleStyle = computed(() => {
     <div
         @mousedown="onMouseDown"
         @mouseup="onMouseUp"
+        @mouseenter="onMouseEnter"
+        @mouseleave="onMouseLeave"
         @touchend="onTouchEnd"
         @click.stop="onClick"
         ref="el" 
         :data-node="props.identifier" 
         :class="props.class" 
         :style="[{ position: 'relative' }, props.style]">
-        <slot :is-connected="isConnected" :is-connecting="isDragSource" />
+        <slot :is-connected="isConnected" :is-connecting="isDragSource || isDragTarget" />
         <div
             @mousedown="onMouseDown"
             @mouseup="onMouseUp"
+            @mouseenter="onMouseEnter"
+            @mouseleave="onMouseLeave"
             @touchend="onTouchEnd"
             :data-node="props.identifier" :style="handleStyle">
             <slot :is-connected="isConnected" :is-connecting="isDragSource" name="handle" />

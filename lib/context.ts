@@ -31,22 +31,30 @@ export const [useProvideValueMapperStore, useInjectValueMapperStore] = createInj
     }
 
     // dragging connections
-    const isDragging = ref(false);
+    const isDragging = computed(() => !!dragSource.value);
     const dragSource = ref<string | null>(null);
+    const dragTarget = ref<string | null>(null);
 
     const startConnection = (sourceId: string) => {
-        isDragging.value = true;
         dragSource.value = sourceId;
     }
+    // used to show a preview of the connection to the target node
+    const emulateConnection = (targetId: string) => {
+        if (dragSource.value) {
+            dragTarget.value = targetId;
+        }
+    }
+    const clearEmulatedConnection = () => {
+        dragTarget.value = null;
+    }
+
     const endConnection = (targetId: string) => {
         if (dragSource.value) {
             addConnection(dragSource.value, targetId);
         }
-        isDragging.value = false;
         dragSource.value = null;
     }
     const cancelConnection = () => {
-        isDragging.value = false;
         dragSource.value = null;
     }
     const hasConnection = (nodeId: string, nodeType: NodeType = "source") => {
@@ -65,8 +73,11 @@ export const [useProvideValueMapperStore, useInjectValueMapperStore] = createInj
         connections,
         isDragging,
         dragSource,
+        dragTarget,
         startConnection,
         endConnection,
+        emulateConnection,
+        clearEmulatedConnection,
         hasConnection,
         addConnection,
         removeConnection,
@@ -157,11 +168,30 @@ export function useNode(id: MaybeRefOrGetter<string>, type: MaybeRefOrGetter<Nod
         return store.isDragging.value && store.dragSource.value === id$.value;
     })
 
+    const isDragTarget = computed(() => {
+        return store.isDragging.value && store.dragTarget.value === id$.value;
+    })
+
     const onMouseDown = (event: MouseEvent) => {
         event.preventDefault();
         if (type$.value === "source" && !store.hasConnection(id$.value, "source")) {
             event.stopPropagation();
             store.startConnection(id$.value);
+        }
+    }
+
+    const onMouseEnter = (event: MouseEvent) => {
+        event.preventDefault();
+        if (type$.value === 'target') {
+            store.emulateConnection(id$.value);
+        }
+    }
+    const onMouseLeave = (event: MouseEvent) => {
+        event.preventDefault();
+        if (type$.value === 'target') {
+            if (store.dragTarget.value === id$.value) {
+                store.clearEmulatedConnection();
+            }
         }
     }
 
@@ -201,7 +231,7 @@ export function useNode(id: MaybeRefOrGetter<string>, type: MaybeRefOrGetter<Nod
         }
     }
 
-    return { el, rect, isConnected, isDragSource, onMouseDown, onMouseUp, onTouchEnd, onClick };
+    return { el, rect, isConnected, isDragSource, isDragTarget, onMouseDown, onMouseUp, onMouseEnter, onMouseLeave, onTouchEnd, onClick };
 }
 
 
@@ -223,7 +253,7 @@ export function useNode(id: MaybeRefOrGetter<string>, type: MaybeRefOrGetter<Nod
  * ```
  */
 export function useConnectionPreview() {
-    const { isDragging, dragSource, root, nodes } = useValueMapperStore();
+    const { isDragging, dragSource, dragTarget, root, nodes } = useValueMapperStore();
     const sourceRect = computed(() => {
         if (!dragSource.value || !root.value || !isDragging) return null;
         const el = nodes.value[dragSource.value];
@@ -239,6 +269,22 @@ export function useConnectionPreview() {
             bottom: rect.bottom - offset.top
         }
     })
+    const targetRect = computed(() => {
+        if (!dragTarget.value || !root.value || !isDragging) return null;
+        const el = nodes.value[dragTarget.value];
+        if (!el) return null;
+        const rect = el.getBoundingClientRect();
+        const offset = root.value.getBoundingClientRect();
+        return {
+            width: rect.width,
+            height: rect.height,
+            left: rect.left - offset.left,
+            right: rect.right - offset.left,
+            top: rect.top - offset.top,
+            bottom: rect.bottom - offset.top
+        }
+    })
+
     const { elementX, elementY } = useMouseInElement(root);
     
     const coords = computed(() => {
@@ -248,7 +294,10 @@ export function useConnectionPreview() {
                 x: sourceRect.value.right,
                 y: sourceRect.value.top + (sourceRect.value.height / 2)
             },
-            target: {
+            target: targetRect.value ? {
+                x: targetRect.value.left,
+                y: targetRect.value.top + (targetRect.value.height / 2)
+            } : {
                 x: elementX.value,
                 y: elementY.value
             }
