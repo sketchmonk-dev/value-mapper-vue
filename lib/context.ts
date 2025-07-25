@@ -223,6 +223,10 @@ export function useNode(id: MaybeRefOrGetter<string>, type: MaybeRefOrGetter<Nod
         event.preventDefault();
         event.stopPropagation();
         if (type$.value === 'source') {
+            // remove existing connection if it exists
+            if (store.hasConnection(id$.value, "source")) {
+                store.removeConnection(id$.value);
+            }
             // If the source node is clicked, we can start a new connection
             store.startConnection(id$.value);
         } else if (type$.value === 'target') {

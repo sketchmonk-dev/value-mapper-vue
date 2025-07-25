@@ -84,11 +84,11 @@ const mapping = defineModel<Record<string, string>>({
                         >
                             <template #default="{ isConnected, isConnecting}">
                                 <div :class="[
-                                    'font-medium px-3 py-2 rounded border border-gray-300 cursor-crosshair whitespace-nowrap group-hover:border-blue-300',
+                                    'font-medium px-3 py-2 rounded border border-gray-300 cursor-crosshair whitespace-nowrap',
                                     {
                                         'border-blue-500': isConnecting,
                                         'border-green-500': isConnected,
-                                    }
+                                    },
                                 ]">
                                     {{ item.display }}
                                 </div>
